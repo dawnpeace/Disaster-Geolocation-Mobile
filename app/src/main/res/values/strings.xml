@@ -1,0 +1,28 @@
+<resources>
+    <string name="app_name">Pelaporan Bencana</string>
+    <string name="username_text">Username</string>
+    <string name="password_text">Password</string>
+    <string name="login_text">Login</string>
+    <string name="register_text">Register</string>
+    <string name="email_text">Email</string>
+    <string name="fullname_text">Nama Lengkap</string>
+    <string name="identity_number_text">Nomor Identitas</string>
+    <string name="phone_text">No Telpon</string>
+    <string name="gender_text">Jenis Kelamin</string>
+    <string name="gender_male_text">Laki-laki</string>
+    <string name="gender_female_text">Perempuan</string>
+    <string name="new_registration_text">Daftar Baru</string>
+    <string name="back_text">Kembali</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="firefighter_text">Pemadam</string>
+    <string name="police_text">Polisi</string>
+    <string name="upload_text">Unggah Gambar</string>
+    <string name="logout_text">Logout</string>
+    <string name="no_location_data_provided">No location data provided</string>
+    <string name="service_not_available">Sorry, the service is not available</string>
+    <string name="no_address_found">Sorry, no address found</string>
+    <string name="invalid_lat_long_used">Invalid latitude or longitude used</string>
+    <string name="pick_location">Pilih Lokasi</string>
+    <string name="address_text">Alamat Lengkap</string>
+    <string name="permissions_rationale_text">This Application needs to access your local storage</string>
+</resources>
