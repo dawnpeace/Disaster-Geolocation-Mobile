@@ -5,7 +5,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".LoginActivity">
+    <TextView
+        android:text="EMERGENCY CALL"
+        android:layout_above="@id/ll_login"
+        android:textSize="30dp"
+        android:textStyle="bold"
+        android:textColor="@android:color/holo_red_dark"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="10sp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
     <LinearLayout
+        android:id="@+id/ll_login"
         android:orientation="vertical"
         android:layout_width="wrap_content"
         android:padding="20sp"

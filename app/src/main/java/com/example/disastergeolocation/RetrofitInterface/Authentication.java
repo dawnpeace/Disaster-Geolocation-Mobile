@@ -26,7 +26,6 @@ public interface Authentication {
             @Part("identity_number") RequestBody identity_number,
             @Part("phone") RequestBody phone,
             @Part("gender") RequestBody gender,
-            @Part("address") RequestBody address,
-            @Part MultipartBody.Part photo
+            @Part("address") RequestBody address
     );
 }

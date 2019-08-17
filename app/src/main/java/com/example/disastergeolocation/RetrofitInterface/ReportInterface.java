@@ -11,5 +11,5 @@ public interface ReportInterface {
 
     @Multipart
     @POST("report")
-    Call<Void> sendReport(@Part("lat") RequestBody lat, @Part("lng") RequestBody lng, @Part MultipartBody.Part photo, @Part("target") int target);
+    Call<Void> sendReport(@Part("lat") RequestBody lat, @Part("lng") RequestBody lng, @Part MultipartBody.Part photo, @Part("target") int target,@Part("android_curtime") RequestBody curtime);
 }

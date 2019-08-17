@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Patterns;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
@@ -40,8 +41,8 @@ public class RegisterActivity extends AppCompatActivity {
     private Button btnRegister, btnBack, btnUploadImage;
     private ImageView ivProfile;
 
-    private String email, fullname, password, identityNumber, phone, gender, name, address;
-    private File file;
+    private String email, fullname, password, identityNumber, phone, gender, address;
+
     private boolean isUploading = false;
 
     private static final int PROFILE_PICTURE_REQUEST_CODE = 20;
@@ -59,7 +60,6 @@ public class RegisterActivity extends AppCompatActivity {
         if (requestCode == PROFILE_PICTURE_REQUEST_CODE && resultCode == RESULT_OK) {
             Uri uri = data.getData();
             Glide.with(this).load(uri).into(ivProfile);
-            file = getFileFromURI(uri);
         }
     }
 
@@ -76,14 +76,6 @@ public class RegisterActivity extends AppCompatActivity {
         ivProfile = findViewById(R.id.iv_profile);
         btnUploadImage = findViewById(R.id.btn_upload_image);
 
-        btnUploadImage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                intent.setType("image/*");
-                startActivityForResult(intent, PROFILE_PICTURE_REQUEST_CODE);
-            }
-        });
 
         btnBack.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -102,11 +94,10 @@ public class RegisterActivity extends AppCompatActivity {
                 identityNumber = etIdentityNumber.getText().toString();
                 phone = etPhone.getText().toString();
                 gender = rgGender.getCheckedRadioButtonId() == R.id.rb_gender_male ? "male" : "female";
-                name = etFullname.getText().toString();
                 address = etAddress.getText().toString();
 
-                if (!isUploading && file != null) {
-                    doUpload(fullname, email, password, phone, gender, identityNumber, address, file);
+                if (!isUploading) {
+                    doUpload(fullname, email, password, phone, gender, identityNumber, address);
                 } else {
                     Toast.makeText(RegisterActivity.this, "Terjadi Kesalahan !", Toast.LENGTH_SHORT).show();
                 }
@@ -115,37 +106,13 @@ public class RegisterActivity extends AppCompatActivity {
 
     }
 
-    protected File getFileFromURI(Uri uri) {
-        OutputStream out = null;
-        MimeTypeMap mime = MimeTypeMap.getSingleton();
-        String mimeType = mime.getExtensionFromMimeType(getApplicationContext().getContentResolver().getType(uri));
-        String filename = new SimpleDateFormat("yyyy-MM-dd-HH:mm:ss").format(new Date());
-        File file = new File(getCacheDir(), filename + "." + mimeType);
-        InputStream in = null;
-        try {
-            in = getApplicationContext().getContentResolver().openInputStream(uri);
-            out = new FileOutputStream(file);
-            byte[] buf = new byte[1024];
-            int len;
-            while ((len = in.read(buf)) > 0) {
-                out.write(buf, 0, len);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (out != null) {
-                    out.close();
-                }
-                in.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        return file;
-    }
 
-    protected void doUpload(String name, String email, String password, String phone, String gender, String identityNumber, String address, File photo) {
+    protected void doUpload(String name, String email, String password, String phone, String gender, String identityNumber, String address) {
+
+        if(!checkFormValid(email,name,password,identityNumber,address)){
+            return;
+        }
+
         RequestBody rbName = RequestBody.create(MediaType.parse("text/plain"), name);
         RequestBody rbEmail = RequestBody.create(MediaType.parse("text/plain"), email);
         RequestBody rbPassword = RequestBody.create(MediaType.parse("text/plain"), password);
@@ -153,12 +120,11 @@ public class RegisterActivity extends AppCompatActivity {
         RequestBody rbGender = RequestBody.create(MediaType.parse("text/plain"), gender);
         RequestBody rbIdentityNumber = RequestBody.create(MediaType.parse("text/plain"), identityNumber);
         RequestBody rbAddress = RequestBody.create(MediaType.parse("text/plain"), address);
-        RequestBody rbPhoto = RequestBody.create(MediaType.parse("multipart/form-data"), photo);
-        MultipartBody.Part partPhoto = MultipartBody.Part.createFormData("photo", photo.getName(), rbPhoto);
+
 
         Retrofit retrofit = RetrofitInstance.getRetrofit();
         Authentication authentication = retrofit.create(Authentication.class);
-        Call<Void> call = authentication.register(rbName, rbEmail, rbPassword, rbIdentityNumber, rbPhone, rbGender, rbAddress, partPhoto);
+        Call<Void> call = authentication.register(rbName, rbEmail, rbPassword, rbIdentityNumber, rbPhone, rbGender, rbAddress);
 
         isUploading = true;
 
@@ -182,5 +148,51 @@ public class RegisterActivity extends AppCompatActivity {
         });
     }
 
+    protected boolean checkFormValid(String email, String fullname, String password, String identityNumber, String address){
+        boolean isValid = true;
+        if(email == null || !Patterns.EMAIL_ADDRESS.matcher(email).matches()){
+            etEmail.setError("Email tidak valid");
+            isValid = false;
+        } else {
+            etEmail.setError(null);
+        }
+
+        if(fullname.isEmpty()){
+            etFullname.setError("Harap isikan nama");
+            isValid = false;
+        } else {
+            etFullname.setError(null);
+        }
+
+        if(password.length() < 6){
+            etPassword.setError("Harap isikan password");
+            isValid = false;
+        } else {
+            etPassword.setError(null);
+        }
+
+        if(phone.length() < 9 ){
+            etPhone.setError("Nomor tidak valid");
+            isValid = false;
+        } else {
+            etPhone.setError(null);
+        }
+
+        if(identityNumber.length() < 10){
+            etIdentityNumber.setError("Nomor identitas tidak valid");
+            isValid = false;
+        } else {
+            etIdentityNumber.setError(null);
+        }
+
+        if(address.isEmpty()){
+            etAddress.setError("Harap isikan alamat");
+            isValid = false;
+        } else {
+            etAddress.setError(null);
+        }
+
+        return isValid;
+    }
 
 }

@@ -24,18 +24,10 @@
             android:layout_below="@id/iv_image"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
-        <Button
-            android:id="@+id/btn_set_location"
-            android:layout_marginTop="15sp"
-            android:layout_centerHorizontal="true"
-            android:text="@string/pick_location"
-            android:layout_below="@id/btn_upload_image"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
 
         <LinearLayout
             android:id="@+id/ll_rescue"
-            android:layout_below="@id/btn_set_location"
+            android:layout_below="@id/btn_upload_image"
             android:orientation="horizontal"
             android:layout_marginTop="20sp"
             android:layout_centerHorizontal="true"
