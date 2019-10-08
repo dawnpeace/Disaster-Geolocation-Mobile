@@ -13,6 +13,9 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.Button;
@@ -21,7 +24,9 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.example.disastergeolocation.ErrorModel.UploadFile;
+import com.example.disastergeolocation.RetrofitInterface.Authentication;
 import com.example.disastergeolocation.RetrofitInterface.ReportInterface;
+import com.example.disastergeolocation.Tasks.LogoutTask;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -55,7 +60,7 @@ import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity implements EasyPermissions.PermissionCallbacks {
 
-    private Button btnUploadImage, btnPolice, btnFirefighter, btnLogout;
+    private Button btnUploadImage, btnPolice, btnFirefighter;
     private ImageView ivImage;
 
     private FusedLocationProviderClient fusedLocationProviderClient;
@@ -88,7 +93,8 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         sharedPrefHelper = SharedPrefHelper.getInstance(this);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-
+        getSupportActionBar().setTitle("EMERGENCY CALL");
+        storeTokenOnceAvailable();
         initView();
     }
 
@@ -141,7 +147,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
         ivImage = findViewById(R.id.iv_image);
         btnPolice = findViewById(R.id.btn_get_police);
         btnFirefighter = findViewById(R.id.btn_get_firefighter);
-        btnLogout = findViewById(R.id.btn_logout);
 
         btnUploadImage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -202,31 +207,6 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             }
         });
 
-        btnLogout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                new AlertDialog.Builder(MainActivity.this)
-                        .setMessage("Anda Yakin ingin keluar ?")
-                        .setPositiveButton("Ya", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                sharedPrefHelper.logout();
-                                Intent intent = new Intent(MainActivity.this, LoginActivity.class);
-                                startActivity(intent);
-                                finish();
-                            }
-                        })
-                        .setNegativeButton("Tidak", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.dismiss();
-                            }
-                        })
-                        .create()
-                        .show();
-            }
-        });
-
     }
 
     protected File getFileFromURI(Uri uri) {
@@ -257,6 +237,30 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             }
         }
         return file;
+    }
+
+    private void storeTokenOnceAvailable() {
+        if(sharedPrefHelper.getFirebaseToken() != null && !sharedPrefHelper.issetFCMToken() && sharedPrefHelper.isLoggedIn()){
+            Retrofit retrofit = RetrofitInstance.getRetrofit(sharedPrefHelper.getInterceptor());
+            Authentication authentication = retrofit.create(Authentication.class);
+            Call<Void> call = authentication.storeFirebaseToken(sharedPrefHelper.getFirebaseToken());
+            call.enqueue(new Callback<Void>() {
+                @Override
+                public void onResponse(Call<Void> call, Response<Void> response) {
+                    if(response.isSuccessful()){
+                        Log.d("FCMTOKENLOGGEDIN", "onResponse: "+sharedPrefHelper.getFirebaseToken());
+                        sharedPrefHelper.setFcmTokenAvailability(true);
+                    } else {
+                        Log.d("FCMTOKEN", "onResponse: something wrong"+response.code());
+                    }
+                }
+
+                @Override
+                public void onFailure(Call<Void> call, Throwable t) {
+                    Log.d("FCMTOKEN", "onFailure: server failed");
+                }
+            });
+        }
     }
 
 
@@ -328,6 +332,68 @@ public class MainActivity extends AppCompatActivity implements EasyPermissions.P
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
 
+            }
+        });
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.main_menu,menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id){
+            case R.id.menu_history:
+                Intent intent = new Intent(this, HistoryActivity.class);
+                startActivity(intent);
+                break;
+            case R.id.menu_logout:
+                new AlertDialog.Builder(MainActivity.this)
+                        .setMessage("Anda Yakin ingin keluar ?")
+                        .setPositiveButton("Ya", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                logout();
+                            }
+                        })
+                        .setNegativeButton("Tidak", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .create()
+                        .show();
+                break;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void logout(){
+        Retrofit retrofit = RetrofitInstance.getRetrofit(sharedPrefHelper.getInterceptor());
+        Authentication authentication = retrofit.create(Authentication.class);
+        Call<Void> call = authentication.destroyFirebaseToken();
+        call.enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if(response.isSuccessful()){
+                    new LogoutTask().execute();
+                    sharedPrefHelper.logout();
+                    Intent intent = new Intent(MainActivity.this, LoginActivity.class);
+                    startActivity(intent);
+                    ActivityCompat.finishAffinity(MainActivity.this);
+                    finish();
+                } else {
+                    Toast.makeText(MainActivity.this, ""+response.code(), Toast.LENGTH_SHORT).show();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Toast.makeText(MainActivity.this, t.getLocalizedMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

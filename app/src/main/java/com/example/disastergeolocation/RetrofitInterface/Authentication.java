@@ -2,8 +2,6 @@ package com.example.disastergeolocation.RetrofitInterface;
 
 import com.example.disastergeolocation.Model.AuthModel;
 
-import okhttp3.MultipartBody;
-import okhttp3.Request;
 import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.http.Field;
@@ -28,4 +26,11 @@ public interface Authentication {
             @Part("gender") RequestBody gender,
             @Part("address") RequestBody address
     );
+
+    @FormUrlEncoded
+    @POST("auth/store-fcm-token")
+    Call<Void> storeFirebaseToken(@Field("fcm_token") String token);
+
+    @POST("auth/destroy-fcm-token")
+    Call<Void> destroyFirebaseToken();
 }
