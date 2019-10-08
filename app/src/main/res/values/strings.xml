@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Pelaporan Bencana</string>
+    <string name="app_name">Pelaporan Darurat</string>
     <string name="username_text">E-mail</string>
     <string name="password_text">Password</string>
     <string name="login_text">Login</string>
